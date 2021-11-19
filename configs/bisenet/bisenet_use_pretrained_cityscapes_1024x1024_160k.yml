@@ -1,0 +1,6 @@
+_base_: './bisenet_cityscapes_1024x1024_160k.yml'
+
+model:
+  type: BiSeNetV2
+  num_classes: 19
+  pretrained: https://paddleseg.bj.bcebos.com/dygraph/pretrained_models/bisenet_class_pretrained.tar.gz

@@ -1,0 +1,10 @@
+_base_: './bisenet_cityscapes_1024x1024_160k.yml'
+
+loss:
+  types:
+    - type: OhemCrossEntropyLoss
+    - type: OhemCrossEntropyLoss
+    - type: OhemCrossEntropyLoss
+    - type: OhemCrossEntropyLoss
+    - type: OhemCrossEntropyLoss
+  coef: [1, 1, 1, 1, 1]
