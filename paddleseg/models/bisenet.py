@@ -41,6 +41,7 @@ class BiSeNetV2(nn.Layer):
     def __init__(self,
                  num_classes,
                  lambd=0.25,
+                 bga_type='bga',
                  align_corners=False,
                  pretrained=None):
         super().__init__()
@@ -54,7 +55,10 @@ class BiSeNetV2(nn.Layer):
         self.db = DetailBranch(db_channels)
         self.sb = SemanticBranch(sb_channels)
 
-        self.bga = BGA(mid_channels, align_corners)
+        if bga_type == 'bga':
+            self.bga = BGA(mid_channels, align_corners)
+        elif bga_type == 'bga_1':
+            self.bga = BGA_1(mid_channels, align_corners)
         self.aux_head1 = SegHead(C1, C1, num_classes)
         self.aux_head2 = SegHead(C3, C3, num_classes)
         self.aux_head3 = SegHead(C4, C4, num_classes)
@@ -66,9 +70,9 @@ class BiSeNetV2(nn.Layer):
         self.init_weight()
 
     def forward(self, x):
-        dfm = self.db(x)
+        dfm1, dfm2, dfm3 = self.db(x)
         feat1, feat2, feat3, feat4, sfm = self.sb(x)
-        logit = self.head(self.bga(dfm, sfm))
+        logit = self.head(self.bga(dfm3, sfm))
 
         if not self.training:
             logit_list = [logit]
@@ -191,22 +195,24 @@ class DetailBranch(nn.Layer):
 
         C1, C2, C3 = in_channels
 
-        self.convs = nn.Sequential(
-            # stage 1
-            layers.ConvBNReLU(3, C1, 3, stride=2),
-            layers.ConvBNReLU(C1, C1, 3),
-            # stage 2
+        self.stage1 = nn.Sequential(
+            layers.ConvBNReLU(3, C1, 3, stride=2), layers.ConvBNReLU(C1, C1, 3))
+        self.stage2 = nn.Sequential(
             layers.ConvBNReLU(C1, C2, 3, stride=2),
             layers.ConvBNReLU(C2, C2, 3),
             layers.ConvBNReLU(C2, C2, 3),
-            # stage 3
+        )
+        self.stage3 = nn.Sequential(
             layers.ConvBNReLU(C2, C3, 3, stride=2),
             layers.ConvBNReLU(C3, C3, 3),
             layers.ConvBNReLU(C3, C3, 3),
         )
 
     def forward(self, x):
-        return self.convs(x)
+        x1 = self.stage1(x)
+        x2 = self.stage2(x1)
+        x3 = self.stage3(x2)
+        return x1, x2, x3
 
 
 class SemanticBranch(nn.Layer):
@@ -282,6 +288,54 @@ class BGA(nn.Layer):
         sb_feat_up = F.sigmoid(sb_feat_up)
         db_feat = db_feat_keep * sb_feat_up
 
+        sb_feat = db_feat_down * sb_feat_keep
+        sb_feat = F.interpolate(
+            sb_feat,
+            paddle.shape(db_feat)[2:],
+            mode='bilinear',
+            align_corners=self.align_corners)
+
+        return self.conv(db_feat + sb_feat)
+
+
+class BGA_1(nn.Layer):
+    """The Bilateral Guided Aggregation Layer, used to fuse the semantic features and spatial features."""
+
+    def __init__(self, out_dim, align_corners):
+        super().__init__()
+
+        self.align_corners = align_corners
+
+        self.db_branch_keep = nn.Sequential(
+            layers.DepthwiseConvBN(out_dim, out_dim, 3),
+            nn.Conv2D(out_dim, out_dim, 1))
+
+        self.db_branch_down = nn.Sequential(
+            layers.ConvBN(out_dim, out_dim, 3, stride=2),
+            nn.AvgPool2D(kernel_size=3, stride=2, padding=1))
+
+        self.sb_branch_keep = nn.Sequential(
+            layers.DepthwiseConvBN(out_dim, out_dim, 3),
+            nn.Conv2D(out_dim, out_dim, 1))
+
+        self.sb_branch_up = layers.ConvBN(out_dim, out_dim, 3)
+
+        self.conv = layers.ConvBN(out_dim, out_dim, 3)
+
+    def forward(self, dfm, sfm):
+        db_feat_keep = self.db_branch_keep(dfm)
+        sb_feat_up = self.sb_branch_up(sfm)
+        sb_feat_up = F.interpolate(
+            sb_feat_up,
+            paddle.shape(db_feat_keep)[2:],
+            mode='bilinear',
+            align_corners=self.align_corners)
+        sb_feat_up = F.sigmoid(sb_feat_up)
+        db_feat = db_feat_keep * sb_feat_up
+
+        db_feat_down = self.db_branch_down(dfm)
+        sb_feat_keep = self.sb_branch_keep(sfm)
+        db_feat_down = F.sigmoid(db_feat_down)
         sb_feat = db_feat_down * sb_feat_keep
         sb_feat = F.interpolate(
             sb_feat,
