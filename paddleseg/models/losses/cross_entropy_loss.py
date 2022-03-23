@@ -35,7 +35,6 @@ class CrossEntropyLoss(nn.Layer):
             (e.g., the top 20% pixels). This is useful for hard pixel mining. Default ``1.0``.
         data_format (str, optional): The tensor format to use, 'NCHW' or 'NHWC'. Default ``'NCHW'``.
     """
-
     def __init__(self,
                  weight=None,
                  ignore_index=255,
@@ -78,14 +77,11 @@ class CrossEntropyLoss(nn.Layer):
             logit = paddle.transpose(logit, [0, 2, 3, 1])
         label = label.astype('int64')
 
-        # In F.cross_entropy, the ignore_index is invalid, which needs to be fixed.
-        # When there is 255 in the label and paddle version <= 2.1.3, the cross_entropy OP will report an error, which is fixed in paddle develop version.
-        loss = F.cross_entropy(
-            logit,
-            label,
-            ignore_index=self.ignore_index,
-            reduction='none',
-            weight=self.weight)
+        loss = F.cross_entropy(logit,
+                               label,
+                               ignore_index=self.ignore_index,
+                               reduction='none',
+                               weight=self.weight)
 
         return self._post_process_loss(logit, label, semantic_weights, loss)
 
@@ -159,7 +155,6 @@ class DistillCrossEntropyLoss(CrossEntropyLoss):
         data_format (str, optional): The tensor format to use, 'NCHW' or 'NHWC'.
             Default ``'NCHW'``.
     """
-
     def __init__(self,
                  weight=None,
                  ignore_index=255,
@@ -207,12 +202,11 @@ class DistillCrossEntropyLoss(CrossEntropyLoss):
 
         teacher_logit = F.softmax(teacher_logit)
 
-        loss = F.cross_entropy(
-            student_logit,
-            teacher_logit,
-            weight=self.weight,
-            reduction='none',
-            soft_label=True)
+        loss = F.cross_entropy(student_logit,
+                               teacher_logit,
+                               weight=self.weight,
+                               reduction='none',
+                               soft_label=True)
 
         return self._post_process_loss(student_logit, label, semantic_weights,
                                        loss)

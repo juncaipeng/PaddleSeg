@@ -80,7 +80,6 @@ class BCELoss(nn.Layer):
             output = bce_logit_loss(logit, label)
             print(output.numpy())  # [0.45618808]
     """
-
     def __init__(self,
                  weight=None,
                  pos_weight=None,
@@ -99,7 +98,7 @@ class BCELoss(nn.Layer):
                     raise ValueError(
                         "if type of `weight` is str, it should equal to 'dynamic', but it is {}"
                         .format(self.weight))
-            elif isinstance(self.weight, paddle.Tensor):
+            elif not isinstance(self.weight, paddle.Tensor):
                 raise TypeError(
                     'The type of `weight` is wrong, it should be Tensor or str, but it is {}'
                     .format(type(self.weight)))
@@ -111,8 +110,8 @@ class BCELoss(nn.Layer):
                         "if type of `pos_weight` is str, it should equal to 'dynamic', but it is {}"
                         .format(self.pos_weight))
             elif isinstance(self.pos_weight, float):
-                self.pos_weight = paddle.to_tensor(
-                    self.pos_weight, dtype='float32')
+                self.pos_weight = paddle.to_tensor(self.pos_weight,
+                                                   dtype='float32')
             else:
                 raise TypeError(
                     'The type of `pos_weight` is wrong, it should be float or str, but it is {}'
