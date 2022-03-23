@@ -13,8 +13,10 @@
 # limitations under the License.
 """
 To visualize the annotation:
-1. Add the origin image and annotated image to produce the weighted image.
-2. Paste the origin image and weighted image to generate the final image.
+1. Add the origin image and annotated image to produce the weighted annotated image.
+2. If provide the directory of predicted images by pred_dir,  use the same method to
+    produce the weight predicted image.
+3. Paste these images to generate the final image.
 """
 
 import argparse
@@ -37,6 +39,10 @@ def parse_args():
     parser.add_argument(
         '--file_path',
         help='The file contains the path of origin and annotated images',
+        type=str)
+    parser.add_argument(
+        '--pred_dir',
+        help='The directory of predicted images. It is dispensable.',
         type=str)
     parser.add_argument('--save_dir',
                         help='The directory for saving the visualized images',
@@ -66,36 +72,58 @@ def get_images_path(file_path):
 
 
 def main(args):
-    if not os.path.exists(args.save_dir):
-        os.makedirs(args.save_dir)
+    file_path = args.file_path
+    pred_dir = args.pred_dir
+    save_dir = args.save_dir
+    weight = 0.3
 
-    images_path = get_images_path(args.file_path)
+    images_path = get_images_path(file_path)
     bar = progbar.Progbar(target=len(images_path), verbose=1)
+    if not os.path.exists(save_dir):
+        os.makedirs(save_dir)
 
     for idx, (origin_path, annot_path) in enumerate(images_path):
         origin_img = Image.open(origin_path)
-        annot_img = Image.open(annot_path)
+        annot_img = Image.open(annot_path).convert("L")
         annot_img = np.array(annot_img)
+        img_list = [origin_img]
 
-        bar.update(idx + 1)
-        if len(np.unique(annot_img)) == 1:
-            continue
-
-        # weighted image
+        # weighted annoted image
         color_map = visualize.get_color_map_list(256)
-        weighted_img = utils.visualize.visualize(origin_path,
-                                                 annot_img,
-                                                 color_map,
-                                                 weight=0.6)
-        weighted_img = Image.fromarray(
-            cv2.cvtColor(weighted_img, cv2.COLOR_BGR2RGB))
+        wt_annoted_img = utils.visualize.visualize(origin_path,
+                                                   annot_img,
+                                                   color_map,
+                                                   weight=weight)
+        wt_annoted_img = Image.fromarray(
+            cv2.cvtColor(wt_annoted_img, cv2.COLOR_BGR2RGB))
+        img_list.append(wt_annoted_img)
+
+        # weighted pred image
+        if pred_dir is not None:
+            filename = os.path.basename(origin_path)
+            filename = filename.split(".")[0] + ".png"
+            pred_path = os.path.join(pred_dir, filename)
+            assert os.path.exists(
+                pred_path), "The predicted image {} is not existed".format(
+                    pred_path)
+            pred_img = Image.open(pred_path)
+            pred_img = np.array(pred_img)
+
+            wt_pred_img = utils.visualize.visualize(origin_path,
+                                                    pred_img,
+                                                    color_map,
+                                                    weight=weight)
+            wt_pred_img = Image.fromarray(
+                cv2.cvtColor(wt_pred_img, cv2.COLOR_BGR2RGB))
+            img_list.append(wt_pred_img)
 
         # result image
-        result_img = visualize.paste_images([origin_img, weighted_img])
+        result_img = visualize.paste_images(img_list)
 
-        # save
         image_name = os.path.split(origin_path)[-1]
-        result_img.save(os.path.join(args.save_dir, image_name))
+        result_img.save(os.path.join(save_dir, image_name))
+
+        bar.update(idx + 1)
 
 
 if __name__ == '__main__':

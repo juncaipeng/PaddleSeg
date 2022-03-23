@@ -1257,7 +1257,10 @@ class LabelBinaryzation:
     def __init__(self, threshold=0.5):
         self.threshold = threshold
 
-    def __call__(self, im, label):
-        label[label >= self.threshold] = 1
-        label[label < self.threshold] = 0
-        return (im, label)
+    def __call__(self, im, label=None):
+        if label is not None:
+            label[label >= self.threshold] = 1
+            label[label < self.threshold] = 0
+            return (im, label)
+        else:
+            return (im, )
