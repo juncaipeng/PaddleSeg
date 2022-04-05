@@ -8,7 +8,7 @@ lr_scheduler:
   learning_rate: 0.01
   end_lr: 0
   power: 0.9
-  warmup_iters: 200
+  warmup_iters: 500
   warmup_start_lr: 1.0e-5
 
 train_dataset:
