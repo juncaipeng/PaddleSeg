@@ -17,9 +17,9 @@ lr_scheduler:
 loss:
   types:
     - type: CrossEntropyLoss
-    #  weight: [1, 10]
+      weight: [1, 10]
     #- type: OhemCrossEntropyLoss
     #  min_kept: 65000   # batch_size * w * h // 16
     #- type: FocalLoss
     #  alpha: 0.5
-  coef: [100, 100, 100]
+  coef: [1, 1, 1]

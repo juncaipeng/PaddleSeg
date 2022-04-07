@@ -1,7 +1,7 @@
 _base_: 'lvjian1_512x512.yml'
 
 batch_size: 4  # total: 4*4
-iters: 80000   # 2w * 16 / 1.2w = 26 epoch   12647
+iters: 80000   # 8w * 16 / 1.2w = 106 epoch
 
 model:
   type: OCRNet
@@ -10,9 +10,13 @@ model:
     pretrained: https://bj.bcebos.com/paddleseg/dygraph/hrnet_w18_ssld.tar.gz
   backbone_indices: [0]
 
+lr_scheduler:
+  learning_rate: 0.01
+
 loss:
   types:
-    #- type: CrossEntropyLoss
+    - type: CrossEntropyLoss
+      weight: [1, 10]
     #- type: OhemCrossEntropyLoss
     #  min_kept: 65000   # batch_size * w * h // 16
     #- type: FocalLoss
