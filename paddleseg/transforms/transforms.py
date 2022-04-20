@@ -1269,3 +1269,25 @@ class RandomAffine:
             return (im, )
         else:
             return (im, label)
+
+
+@manager.TRANSFORMS.add_component
+class LabelBinaryzation:
+    """
+    Cast the label from float to binary by threshold.
+
+    Args:
+        threshold (float, optional): If val >= threshold, cast val to 1, otherwise cast val to 0.
+            Default: 0.5.
+    """
+
+    def __init__(self, threshold=0.5):
+        self.threshold = threshold
+
+    def __call__(self, im, label=None):
+        if label is not None:
+            label[label >= self.threshold] = 1
+            label[label < self.threshold] = 0
+            return (im, label)
+        else:
+            return (im, )
