@@ -55,12 +55,16 @@ class Compose:
         """
         if isinstance(im, str):
             im = cv2.imread(im).astype('float32')
-        if isinstance(label, str):
-            label = np.asarray(Image.open(label))
         if im is None:
             raise ValueError('Can\'t read The image file {}!'.format(im))
         if self.to_rgb:
             im = cv2.cvtColor(im, cv2.COLOR_BGR2RGB)
+
+        if isinstance(label, str):
+            label = Image.open(label)
+            if label.mode not in ('1', 'L'):
+                label = label.convert('L')
+            label = np.array(label)
 
         for op in self.transforms:
             outputs = op(im, label)
