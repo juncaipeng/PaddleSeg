@@ -11,5 +11,10 @@ model:
 
 loss:
   types:
-    - type: DiceLoss
+    - type: OhemCrossEntropyLoss
+      min_kept: 260000   # batch_size * 1024 * 1024 // 16
+    - type: OhemCrossEntropyLoss
+      min_kept: 260000
+    - type: OhemCrossEntropyLoss
+      min_kept: 260000
   coef: [1, 1, 1]
