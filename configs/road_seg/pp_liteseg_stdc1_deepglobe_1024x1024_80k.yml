@@ -1,7 +1,4 @@
-_base_: '../_base_/deepglobe.yml'
-
-batch_size: 4  # total: 4*4
-iters: 80000  # 8w * 16 / 6226 = 205 epoch
+_base_: './deepglobe.yml'
 
 model:
   type: PPLiteSeg
