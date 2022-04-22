@@ -1,5 +1,6 @@
 _base_: './deepglobe.yml'
 
+
 model:
   type: PPLiteSeg
   backbone:
@@ -11,7 +12,7 @@ model:
 loss:
   types:
     - type: OhemCrossEntropyLoss
-      min_kept: 260000   # batch_size * 1024 * 1024 // 16
+      min_kept: 260000
     - type: OhemCrossEntropyLoss
       min_kept: 260000
     - type: OhemCrossEntropyLoss

@@ -1,5 +1,7 @@
 _base_: './deepglobe.yml'
 
+batch_size: 2
+
 model:
   type: OCRNet
   backbone:
