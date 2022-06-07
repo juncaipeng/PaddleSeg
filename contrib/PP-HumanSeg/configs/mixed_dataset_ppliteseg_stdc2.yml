@@ -1,5 +1,5 @@
 batch_size: 8   # 4 gpu
-iters: 200000
+iters: 100000
 save_interval: 1000
 
 train_roots:
