@@ -1,4 +1,4 @@
-batch_size: 12    # 2 GPUs
+batch_size: 128    # 2 GPUs
 iters: 10000
 save_interval: 500
 
