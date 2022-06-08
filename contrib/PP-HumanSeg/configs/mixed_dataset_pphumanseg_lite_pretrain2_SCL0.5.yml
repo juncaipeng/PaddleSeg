@@ -2,12 +2,6 @@ batch_size: 128
 iters: 10000
 save_interval: 400
 
-model:
-  type: PPHumanSegLite
-  pretrained: pretrained_model/pphumanseg_lite_humanseg_trained_best.pdparams
-  align_corners: False
-  num_classes: 2
-
 train_roots:
   - data/portrait14k
   - data/matting_human_half
@@ -24,13 +18,13 @@ val_roots:
   - data/humanseg
 
 dataset_weights:
+  - 0.6
   - 0.4
-  - 0.2
-  - 0.4
+  - 0
 
 class_weights:
-  - 0.3
-  - 0.7
+  - 0.5
+  - 0.5
 
 train_transforms:
   - type: PaddingByAspectRatio
@@ -81,3 +75,9 @@ loss:
         - type: LovaszSoftmaxLoss
       coef: [0.8, 0.5, 0.2]
   coef: [1]
+
+model:
+  type: PPHumanSegLite
+  pretrained: pretrained_model/pphumanseg_lite_humanseg_trained_best.pdparams
+  align_corners: False
+  num_classes: 2
