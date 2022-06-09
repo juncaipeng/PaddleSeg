@@ -1,6 +1,6 @@
-batch_size: 8    # 4 GPUs
-iters: 100000
-save_interval: 1000
+batch_size: 128    # 2 GPUs
+iters: 10000
+save_interval: 500
 
 train_dataset:
   type: Dataset
@@ -46,7 +46,7 @@ optimizer:
 
 lr_scheduler:
   type: PolynomialDecay
-  learning_rate: 0.01
+  learning_rate: 0.1
   end_lr: 0
   power: 0.9
 
@@ -57,12 +57,10 @@ loss:
         - type: CrossEntropyLoss
         - type: LovaszSoftmaxLoss
       coef: [0.8, 0.2]
-  coef: [1, 1, 1]
+  coef: [1]
 
 model:
-  type: PPLiteSeg
+  type: PPHumanSegLite
+  pretrained: pretrained_model/pphumanseg_lite_humanseg_trained_best.pdparams
+  align_corners: False
   num_classes: 2
-  backbone:
-    type: STDC2
-    pretrained: https://bj.bcebos.com/paddleseg/dygraph/PP_STDCNet2.tar.gz
-

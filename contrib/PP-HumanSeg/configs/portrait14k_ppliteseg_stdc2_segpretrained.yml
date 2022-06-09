@@ -1,6 +1,6 @@
 batch_size: 8    # 4 GPUs
-iters: 100000
-save_interval: 1000
+iters: 50000
+save_interval: 500
 
 train_dataset:
   type: Dataset
@@ -46,7 +46,7 @@ optimizer:
 
 lr_scheduler:
   type: PolynomialDecay
-  learning_rate: 0.01
+  learning_rate: 0.001
   end_lr: 0
   power: 0.9
 
@@ -65,4 +65,5 @@ model:
   backbone:
     type: STDC2
     pretrained: https://bj.bcebos.com/paddleseg/dygraph/PP_STDCNet2.tar.gz
+  pretrained: output/mixed_dataset_ppliteseg_stdc2/test_0/best_model/model.pdparams
 

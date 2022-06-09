@@ -19,7 +19,7 @@ import os.path as osp
 
 import cv2
 import numpy as np
-from paddleseg.utils import get_sys_env, logger
+from paddleseg.utils import get_sys_env, logger, get_image_list
 
 from deploy.infer import Predictor
 
@@ -103,6 +103,8 @@ def background_replace(args):
     env_info = get_sys_env()
     args.use_gpu = True if env_info['Paddle compiled with cuda'] and env_info[
         'GPUs used'] else False
+    if args.use_gpu:
+        print("use gpu")
     predictor = Predictor(args)
 
     if not osp.exists(args.save_dir):
@@ -110,17 +112,29 @@ def background_replace(args):
 
     # 图像背景替换
     if args.img_path is not None:
-        if not osp.exists(args.img_path):
-            raise Exception('The --img_path is not existed: {}'.format(
-                args.img_path))
-        img = cv2.imread(args.img_path)
-        bg = get_bg_img(args.bg_img_path, img.shape)
+        if os.path.isfile(args.img_path):
+            img_list = [args.img_path]
+        elif os.path.isdir(args.img_path):
+            img_list, _ = get_image_list(args.img_path)
+        else:
+            raise Exception("The --img_path is wrong")
 
-        comb = predictor.run(img, bg)
+        for idx, img_path in enumerate(img_list):
+            if not osp.exists(img_path):
+                raise Exception('The --img_path is not existed: {}'.format(
+                    img_path))
+            img = cv2.imread(img_path)
+            bg = get_bg_img(args.bg_img_path, img.shape)
 
-        save_name = osp.basename(args.img_path)
-        save_path = osp.join(args.save_dir, save_name)
-        cv2.imwrite(save_path, comb)
+            comb = predictor.run(img, bg)
+
+            save_name = osp.basename(img_path)
+            save_path = osp.join(args.save_dir, save_name)
+            cv2.imwrite(save_path, comb)
+
+            if idx % 10 == 0:
+                print("{} / {}".format(idx, len(img_list)))
+
     # 视频背景替换
     else:
         # 获取背景：如果提供背景视频则以背景视频作为背景，否则采用提供的背景图片
