@@ -17,7 +17,7 @@ echo "train log: ${save_dir}/log_dir/"
 nohup python -m paddle.distributed.launch --log_dir ${save_dir}/log_dir mixed_data_train.py \
     --config configs/${model}.yml \
     --save_dir ${save_dir} \
-    --num_workers 4 \
+    --num_workers 3 \
     --do_eval \
     --use_vdl \
     --log_iters 10 \
