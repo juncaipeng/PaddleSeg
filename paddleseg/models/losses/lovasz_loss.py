@@ -11,7 +11,10 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""Lovasz-Softmax and Jaccard hinge loss in PaddlePaddle"""
+"""
+Lovasz-Softmax and Jaccard hinge loss in PaddlePaddle.
+Refer to https://github.com/bermanmaxim/LovaszSoftmax.
+"""
 
 from __future__ import absolute_import
 from __future__ import division
@@ -46,9 +49,15 @@ class LovaszSoftmaxLoss(nn.Layer):
 
         Args:
             logits (Tensor): Shape is [N, C, H, W], logits at each prediction (between -\infty and +\infty).
+                             Interpreted as binary (sigmoid) output with outputs of size [N, H, W].
             labels (Tensor): Shape is [N, 1, H, W] or [N, H, W], ground truth labels (between 0 and C - 1).
         """
-        probas = F.softmax(logits, axis=1)
+        if logits.ndim == 4 and logits.shape[1] > 1:
+            probas = F.softmax(logits, axis=1)
+        elif logits.ndim == 3 or (logits.ndim == 4 and logits.shape[1] == 1):
+            probas = F.sigmoid(logits)
+        else:
+            raise ValueError("The ndim of logits should be 3 or 4.")
         vprobas, vlabels = flatten_probas(probas, labels, self.ignore_index)
         loss = lovasz_softmax_flat(vprobas, vlabels, classes=self.classes)
         return loss

@@ -60,8 +60,14 @@ class PPLiteSeg(nn.Layer):
                  arm_out_chs=[64, 96, 128],
                  seg_head_inter_chs=[64, 64, 64],
                  resize_mode='bilinear',
+                 out_prob=False,
                  pretrained=None):
         super().__init__()
+
+        self.out_prob = out_prob
+        if self.out_prob == 1:
+            assert num_classes == 2, "When use out_prob, the num_classes should be 2"
+            num_classes = 1
 
         # backbone
         assert hasattr(backbone, 'feat_channels'), \

@@ -37,28 +37,43 @@ class DiceLoss(nn.Layer):
         self.eps = 1e-8
 
     def forward(self, logits, labels):
-        num_class = logits.shape[1]
-        if self.weight is not None:
-            assert num_class == len(self.weight), \
-                "The lenght of weight should be euqal to the num class"
+        if logits.ndim == 3:
+            logits = paddle.unsqueeze(logits, 1)
 
-        logits = F.softmax(logits, axis=1)
-        labels_one_hot = F.one_hot(labels, num_class)
-        labels_one_hot = paddle.transpose(labels_one_hot, [0, 3, 1, 2])
-
-        mask = labels != self.ignore_index
-        mask = paddle.cast(paddle.unsqueeze(mask, 1), 'float32')
-
-        dice_loss = 0.0
-        for i in range(num_class):
-            dice_loss_i = dice_loss_helper(logits[:, i], labels_one_hot[:, i],
-                                           mask, self.smooth, self.eps)
+        if logits.shape[1] > 1:
+            num_class = logits.shape[1]
             if self.weight is not None:
-                dice_loss_i *= self.weight[i]
-            dice_loss += dice_loss_i
-        dice_loss = dice_loss / num_class
+                assert num_class == len(self.weight), \
+                    "The lenght of weight should be euqal to the num class"
 
-        return dice_loss
+            logits = F.softmax(logits, axis=1)
+            labels_one_hot = F.one_hot(labels, num_class)
+            labels_one_hot = paddle.transpose(labels_one_hot, [0, 3, 1, 2])
+
+            mask = labels != self.ignore_index
+            mask = paddle.cast(paddle.unsqueeze(mask, 1), 'float32')
+
+            dice_loss = 0.0
+            for i in range(num_class):
+                dice_loss_i = dice_loss_helper(logits[:, i],
+                                               labels_one_hot[:, i], mask,
+                                               self.smooth, self.eps)
+                if self.weight is not None:
+                    dice_loss_i *= self.weight[i]
+                dice_loss += dice_loss_i
+            dice_loss = dice_loss / num_class
+
+            return dice_loss
+        elif logits.shape[1] == 1:
+            logits = F.sigmoid(logits)
+
+            labels = paddle.unsqueeze(labels, 1)
+            mask = labels != self.ignore_index
+            mask = paddle.cast(mask, 'float32')
+
+            dice_loss = dice_loss_helper(logits, labels, mask, self.smooth,
+                                         self.eps)
+            return dice_loss
 
 
 def dice_loss_helper(logit, label, mask, smooth, eps):
