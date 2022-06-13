@@ -17,6 +17,7 @@ import os
 
 import paddle
 import yaml
+import paddle.nn.functional as F
 
 from paddleseg.cvlibs import Config
 from paddleseg.utils import logger
@@ -55,6 +56,10 @@ def parse_args():
         help='Add the softmax operation at the end of the network',
         action='store_true')
     parser.add_argument(
+        '--with_sigmoid',
+        help='Add the sigmoid operation at the end of the network',
+        action='store_true')
+    parser.add_argument(
         "--input_shape",
         nargs='+',
         help="Export the model with fixed input shape, such as 1 3 1024 1024.",
@@ -65,10 +70,15 @@ def parse_args():
 
 
 class SavedSegmentationNet(paddle.nn.Layer):
-    def __init__(self, net, without_argmax=False, with_softmax=False):
+    def __init__(self,
+                 net,
+                 without_argmax=False,
+                 with_softmax=False,
+                 with_sigmoid=False):
         super().__init__()
         self.net = net
-        self.post_processer = PostPorcesser(without_argmax, with_softmax)
+        self.post_processer = PostPorcesser(without_argmax, with_softmax,
+                                            with_sigmoid)
 
     def forward(self, x):
         outs = self.net(x)
@@ -77,10 +87,11 @@ class SavedSegmentationNet(paddle.nn.Layer):
 
 
 class PostPorcesser(paddle.nn.Layer):
-    def __init__(self, without_argmax, with_softmax):
+    def __init__(self, without_argmax, with_softmax, with_sigmoid):
         super().__init__()
         self.without_argmax = without_argmax
         self.with_softmax = with_softmax
+        self.with_sigmoid = with_sigmoid
 
     def forward(self, outs):
         new_outs = []
@@ -89,6 +100,9 @@ class PostPorcesser(paddle.nn.Layer):
                 out = paddle.nn.functional.softmax(out, axis=1)
             if not self.without_argmax:
                 out = paddle.argmax(out, axis=1)
+            if self.with_sigmoid:
+                out = F.sigmoid(out)
+                print("add sigmoid")
             new_outs.append(out)
         return new_outs
 
@@ -108,9 +122,9 @@ def main(args):
     else:
         shape = args.input_shape
 
-    if not args.without_argmax or args.with_softmax:
+    if not args.without_argmax or args.with_softmax or args.with_sigmoid:
         new_net = SavedSegmentationNet(net, args.without_argmax,
-                                       args.with_softmax)
+                                       args.with_softmax, args.with_sigmoid)
     else:
         new_net = net
 
