@@ -14,6 +14,9 @@
 
 import argparse
 import os
+import sys
+__dir__ = os.path.dirname(os.path.abspath(__file__))
+sys.path.append(os.path.abspath(os.path.join(__dir__, '../../')))
 
 import paddle
 
@@ -126,7 +129,6 @@ def main(args):
     val_roots = cfg.val_roots
     dataset_weights = cfg.dataset_weights
     class_weights = cfg.class_weights
-    train_file_lists = cfg.train_file_lists
     train_transforms = cfg.train_transforms
     val_transforms = cfg.val_transforms
     losses = cfg.loss
@@ -137,13 +139,13 @@ def main(args):
     logger.info(msg)
 
     train_datasets = []
-    for i, train_root in enumerate(cfg.train_roots):
+    for _, train_root in enumerate(cfg.train_roots):
         train_datasets.append(
             Dataset(
                 train_transforms,
                 train_root,
                 2,
-                train_path=os.path.join(train_root, train_file_lists[i])))
+                train_path=os.path.join(train_root, "train.txt")))
     if len(train_datasets) == 0:
         raise ValueError(
             'The length of train_datasets is 0. Please check if your dataset is valid'
@@ -155,26 +157,15 @@ def main(args):
         num_classes=2)
 
     if args.do_eval:
-        val_dataset0 = Dataset(
-            val_transforms,
-            val_roots[0],
-            2,
-            mode='val',
-            val_path=os.path.join(val_roots[0], 'val.txt'))
-        val_dataset1 = Dataset(
-            val_transforms,
-            val_roots[1],
-            2,
-            mode='val',
-            val_path=os.path.join(val_roots[1], 'val.txt'))
-        val_dataset2 = Dataset(
-            val_transforms,
-            val_roots[2],
-            2,
-            mode='val',
-            val_path=os.path.join(val_roots[2], 'val.txt'))
-        val_datasets = [val_dataset0, val_dataset1, val_dataset2]
-        # val_datasets = val_dataset0
+        val_datasets = []
+        for root in val_roots:
+            dataset = Dataset(
+                val_transforms,
+                root,
+                2,
+                mode='val',
+                val_path=os.path.join(root, 'val.txt'))
+            val_datasets.append(dataset)
     else:
         val_datasets = None
 

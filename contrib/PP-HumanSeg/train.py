@@ -13,7 +13,6 @@
 # limitations under the License.
 
 import argparse
-
 import os
 import sys
 __dir__ = os.path.dirname(os.path.abspath(__file__))
