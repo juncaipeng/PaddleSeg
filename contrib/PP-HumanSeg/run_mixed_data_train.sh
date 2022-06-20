@@ -14,7 +14,7 @@ echo "config: configs/${model}.yml"
 echo "save_dir: ${save_dir}"
 echo "train log: ${save_dir}/log_dir/"
 
-nohup python -m paddle.distributed.launch --log_dir ${save_dir}/log_dir mixed_data_train.py \
+nohup python -m paddle.distributed.launch --log_dir ${save_dir}/log_dir ./scripts/mixed_data_train.py \
     --config configs/${model}.yml \
     --save_dir ${save_dir} \
     --num_workers 3 \

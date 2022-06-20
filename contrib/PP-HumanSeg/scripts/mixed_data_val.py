@@ -16,7 +16,7 @@ import argparse
 import os
 import sys
 __dir__ = os.path.dirname(os.path.abspath(__file__))
-sys.path.append(os.path.abspath(os.path.join(__dir__, '../../')))
+sys.path.append(os.path.abspath(os.path.join(__dir__, '../../../')))
 
 import numpy as np
 import paddle
@@ -28,8 +28,7 @@ from paddleseg.utils import get_sys_env, logger, config_check, utils
 from paddleseg.transforms import *
 from paddleseg.datasets import Dataset
 
-from datasets.humanseg import HumanSeg
-from scripts.config import Config
+from config import Config
 
 
 def parse_args():
@@ -80,28 +79,17 @@ def main(args):
     file_list = args.file_list
     logger.info('file_list {}'.format(file_list))
 
-    val_dataset0 = Dataset(
-        val_transforms,
-        val_roots[0],
-        2,
-        mode='val',
-        val_path=os.path.join(val_roots[0], file_list))
-    val_dataset1 = Dataset(
-        val_transforms,
-        val_roots[1],
-        2,
-        mode='val',
-        val_path=os.path.join(val_roots[1], file_list))
-    val_dataset2 = Dataset(
-        val_transforms,
-        val_roots[2],
-        2,
-        mode='val',
-        val_path=os.path.join(val_roots[2], file_list))
-    val_datasets = [val_dataset0, val_dataset1, val_dataset2]
-    # val_datasets = [val_dataset0]
-    model = cfg.model
+    val_datasets = []
+    for root in val_roots:
+        dataset = Dataset(
+            val_transforms,
+            root,
+            2,
+            mode='val',
+            val_path=os.path.join(root, file_list))
+        val_datasets.append(dataset)
 
+    model = cfg.model
     if args.model_path:
         utils.load_entire_model(model, args.model_path)
         logger.info('Loaded trained params of model successfully')
