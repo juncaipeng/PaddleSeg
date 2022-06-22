@@ -1016,6 +1016,72 @@ class RandomRotation:
 
 
 @manager.TRANSFORMS.add_component
+class RandomRotation90:
+    """
+    Rotate an image 90 clockwise.
+
+    Args:
+        im_padding_value (list, optional): The padding value of raw image.
+            Default: [127.5, 127.5, 127.5].
+        label_padding_value (int, optional): The padding value of annotation image. Default: 255.
+    """
+
+    def __init__(self,
+                 prob=0.5,
+                 im_padding_value=(127.5, 127.5, 127.5),
+                 label_padding_value=255):
+        self.prob = prob
+        self.im_padding_value = im_padding_value
+        self.label_padding_value = label_padding_value
+
+    def __call__(self, im, label=None):
+        """
+        Args:
+            im (np.ndarray): The Image data.
+            label (np.ndarray, optional): The label data. Default: None.
+
+        Returns:
+            (tuple). When label is None, it returns (im, ), otherwise it returns (im, label).
+        """
+
+        if random.random() < self.prob:
+            (h, w) = im.shape[:2]
+            do_rotation = -90 if random.random() < 0.5 else 90
+            pc = (w // 2, h // 2)
+            r = cv2.getRotationMatrix2D(pc, do_rotation, 1.0)
+            cos = np.abs(r[0, 0])
+            sin = np.abs(r[0, 1])
+
+            nw = int((h * sin) + (w * cos))
+            nh = int((h * cos) + (w * sin))
+
+            (cx, cy) = pc
+            r[0, 2] += (nw / 2) - cx
+            r[1, 2] += (nh / 2) - cy
+            dsize = (nw, nh)
+            im = cv2.warpAffine(
+                im,
+                r,
+                dsize=dsize,
+                flags=cv2.INTER_LINEAR,
+                borderMode=cv2.BORDER_CONSTANT,
+                borderValue=self.im_padding_value)
+            if label is not None:
+                label = cv2.warpAffine(
+                    label,
+                    r,
+                    dsize=dsize,
+                    flags=cv2.INTER_NEAREST,
+                    borderMode=cv2.BORDER_CONSTANT,
+                    borderValue=self.label_padding_value)
+
+        if label is None:
+            return (im, )
+        else:
+            return (im, label)
+
+
+@manager.TRANSFORMS.add_component
 class RandomScaleAspect:
     """
     Crop a sub-image from an original image with a range of area ratio and aspect and
