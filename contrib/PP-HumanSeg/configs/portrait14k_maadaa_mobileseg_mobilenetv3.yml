@@ -58,7 +58,7 @@ optimizer:
 
 lr_scheduler:
   type: PolynomialDecay
-  learning_rate: 0.01
+  learning_rate: 0.001
   end_lr: 0
   power: 0.9
 
@@ -81,4 +81,4 @@ model:
   cm_out_ch: 64
   arm_out_chs: [32, 48, 64]
   seg_head_inter_chs: [16, 32, 32]
-  pretrained: output/mixed_dataset_mobileseg_mobilenetv3/test_0/best_model/model.pdparams
+  pretrained: output/mixed_dataset_mobileseg_mobilenetv3/test_1/best_model/model.pdparams

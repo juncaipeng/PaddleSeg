@@ -17,6 +17,7 @@ import os
 import sys
 __dir__ = os.path.dirname(os.path.abspath(__file__))
 sys.path.append(os.path.abspath(os.path.join(__dir__, '../../../')))
+sys.path.append(os.path.abspath(os.path.join(__dir__, '../')))
 
 import paddle
 
@@ -26,9 +27,9 @@ from paddleseg.transforms import *
 from paddleseg.models import *
 from paddleseg.models.losses import *
 from paddleseg.datasets import Dataset
-from ..datasets.mixed_dataset import MixedDataset
+from datasets.mixed_dataset import MixedDataset
 
-from mixed_data_train import train
+from mixed_data_train_helper import train
 from config import Config
 
 
