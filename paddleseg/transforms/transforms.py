@@ -1046,7 +1046,7 @@ class RandomRotation90:
 
         if random.random() < self.prob:
             (h, w) = im.shape[:2]
-            do_rotation = -90 if random.random() < 0.5 else 90
+            do_rotation = -90
             pc = (w // 2, h // 2)
             r = cv2.getRotationMatrix2D(pc, do_rotation, 1.0)
             cos = np.abs(r[0, 0])
