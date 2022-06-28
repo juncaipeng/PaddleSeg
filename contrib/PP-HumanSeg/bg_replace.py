@@ -110,7 +110,7 @@ def background_replace(args):
         print("use gpu")
     predictor = Predictor(args)
 
-    if not osp.exists(args.save_dir):
+    if osp.isdir(args.save_dir) and not osp.exists(args.save_dir):
         os.makedirs(args.save_dir)
 
     # 图像背景替换
@@ -163,7 +163,9 @@ def background_replace(args):
             height = int(cap_video.get(cv2.CAP_PROP_FRAME_HEIGHT))
             save_name = osp.basename(args.video_path)
             save_name = save_name.split('.')[0]
-            save_path = osp.join(args.save_dir, save_name + '.avi')
+            #save_path = osp.join(args.save_dir, save_name + '.avi')
+            save_path = args.save_dir
+            assert not osp.isdir(save_path) and save_path.endswith(".avi")
 
             cap_out = cv2.VideoWriter(
                 save_path,

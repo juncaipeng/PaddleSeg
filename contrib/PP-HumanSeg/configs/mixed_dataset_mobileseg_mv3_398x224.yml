@@ -34,6 +34,8 @@ train_transforms:
   - type: Resize
     target_size: [398, 224]
   - type: ResizeStepScaling
+    min_scale_factor: 0.5
+    max_scale_factor: 1.5
     scale_step_size: 0
   - type: RandomRotation
   - type: RandomPaddingCrop
