@@ -1,31 +1,28 @@
-batch_size: 16    # 4 GPUs
-iters: 150000
+batch_size: 8   # 4 gpu
+iters: 200000
 save_interval: 1000
 
 train_roots:
   - data/portrait14k
   - data/maadaa
-  - data/portrait14k_rotate
-  - data/maadaa_rotate
-
+  - data/matting_human_half
+  - data/humanseg
 
 train_data_ratio:
-  - 2
+  - 8
+  - 5
   - 1
-  - 2
   - 1
 
 val_roots:
   - data/portrait14k
   - data/maadaa
-  - data/portrait14k_rotate
-  - data/maadaa_rotate
 
 dataset_weights:
   - 0.5
   - 0.5
-  - 0.5
-  - 0.5
+  - 0
+  - 0
 
 class_weights:
   - 0.5
@@ -33,13 +30,12 @@ class_weights:
 
 train_transforms:
   - type: Resize
-    target_size: [320, 180]
-  - type: RandomRotation
-    max_rotation: 15
+    target_size: [192, 192]
   - type: ResizeStepScaling
     scale_step_size: 0
+  - type: RandomRotation
   - type: RandomPaddingCrop
-    crop_size: [320, 180]
+    crop_size: [192, 192]
   - type: RandomHorizontalFlip
   - type: RandomDistort
   - type: RandomBlur
@@ -48,13 +44,13 @@ train_transforms:
 
 val_transforms:
   - type: Resize
-    target_size: [320, 180]
+    target_size: [192, 192]
   - type: Normalize
 
 export:
   transforms:
     - type: Resize
-      target_size: [320, 180]
+      target_size: [192, 192]
     - type: Normalize
 
 optimizer:
@@ -64,7 +60,7 @@ optimizer:
 
 lr_scheduler:
   type: PolynomialDecay
-  learning_rate: 0.001
+  learning_rate: 0.01
   end_lr: 0
   power: 0.9
 
@@ -78,12 +74,9 @@ loss:
   coef: [1, 1, 1]
 
 model:
-  type: MobileSeg
+  type: FCN
   num_classes: 2
   backbone:
-    type: MobileNetV3_large_x1_0  # out channels: [24, 40, 112, 160]
-    pretrained: https://paddleseg.bj.bcebos.com/dygraph/backbone/mobilenetv3_large_x1_0_ssld.tar.gz
-  cm_bin_sizes: [1, 2]
-  cm_out_ch: 64
-  arm_out_chs: [32, 48, 64]
-  seg_head_inter_chs: [16, 32, 32]
+    type: HRNet_W18_Small_V1
+    align_corners: False
+  backbone_indices: [-1]
