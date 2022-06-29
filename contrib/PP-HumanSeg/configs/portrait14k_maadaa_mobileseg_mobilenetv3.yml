@@ -23,15 +23,13 @@ class_weights:
   - 0.5
 
 train_transforms:
-  - type: PaddingByAspectRatio
-    aspect_ratio: 1.77777778
   - type: Resize
-    target_size: [398, 224]
+    target_size: [256, 144]
   - type: ResizeStepScaling
     scale_step_size: 0
   - type: RandomRotation
   - type: RandomPaddingCrop
-    crop_size: [398, 224]
+    crop_size: [256, 144]
   - type: RandomHorizontalFlip
   - type: RandomDistort
   - type: RandomBlur
@@ -39,16 +37,14 @@ train_transforms:
   - type: Normalize
 
 val_transforms:
-  - type: PaddingByAspectRatio
-    aspect_ratio: 1.77777778
   - type: Resize
-    target_size: [398, 224]
+    target_size: [256, 144]
   - type: Normalize
 
 export:
   transforms:
     - type: Resize
-      target_size: [398, 224]
+      target_size: [256, 144]
     - type: Normalize
 
 optimizer:

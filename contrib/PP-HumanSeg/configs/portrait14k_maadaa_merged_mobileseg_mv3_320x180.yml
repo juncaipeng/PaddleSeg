@@ -10,14 +10,14 @@ train_dataset:
   num_classes: 2
   transforms:
     - type: Resize
-      target_size: [320, 180]
+      target_size: [398, 224]
     - type: ResizeStepScaling
       min_scale_factor: 0.5
       max_scale_factor: 1.5
       scale_step_size: 0
     - type: RandomRotation
     - type: RandomPaddingCrop
-      crop_size: [320, 180]
+      crop_size: [398, 224]
     - type: RandomHorizontalFlip
     - type: RandomDistort
     - type: RandomBlur
@@ -32,13 +32,13 @@ val_dataset:
   num_classes: 2
   transforms:
     - type: Resize
-      target_size: [320, 180]
+      target_size: [398, 224]
     - type: Normalize
 
 export:
   transforms:
     - type: Resize
-      target_size: [320, 180]
+      target_size: [398, 224]
     - type: Normalize
 
 optimizer:

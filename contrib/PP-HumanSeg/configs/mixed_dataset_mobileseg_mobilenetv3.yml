@@ -1,4 +1,4 @@
-batch_size: 8   # 4 gpu
+batch_size: 8   # total: 32
 iters: 200000
 save_interval: 1000
 
@@ -32,14 +32,14 @@ train_transforms:
   - type: PaddingByAspectRatio
     aspect_ratio: 1.77777778
   - type: Resize
-    target_size: [398, 224]
+    target_size: [256, 144]
   - type: ResizeStepScaling
     min_scale_factor: 0.5
     max_scale_factor: 1.5
     scale_step_size: 0
   - type: RandomRotation
   - type: RandomPaddingCrop
-    crop_size: [398, 224]
+    crop_size: [256, 144]
   - type: RandomHorizontalFlip
   - type: RandomDistort
   - type: RandomBlur
@@ -47,16 +47,14 @@ train_transforms:
   - type: Normalize
 
 val_transforms:
-  - type: PaddingByAspectRatio
-    aspect_ratio: 1.77777778
   - type: Resize
-    target_size: [398, 224]
+    target_size: [256, 144]
   - type: Normalize
 
 export:
   transforms:
     - type: Resize
-      target_size: [398, 224]
+      target_size: [256, 144]
     - type: Normalize
 
 optimizer:
