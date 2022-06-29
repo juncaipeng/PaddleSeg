@@ -200,10 +200,12 @@ class MobileSegHead(nn.Layer):
 
         if self.use_last_fuse:
             x_list = [out_feat_list[0]]
-            for x, conv in zip(out_feat_list[1:], self.fuse_convs):
+            size = paddle.shape(out_feat_list[0])[2:]
+            for i, (x, conv
+                    ) in enumerate(zip(out_feat_list[1:], self.fuse_convs)):
                 x = conv(x)
                 x = F.interpolate(
-                    x, scale_factor=2**i, mode='bilinear', align_corners=False)
+                    x, size=size, mode='bilinear', align_corners=False)
                 x_list.append(x)
             x = paddle.concat(x_list, axis=1)
             x = self.last_conv(x)
