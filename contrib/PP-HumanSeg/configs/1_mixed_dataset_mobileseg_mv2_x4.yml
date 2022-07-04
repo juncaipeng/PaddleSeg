@@ -79,8 +79,8 @@ model:
   type: MobileSeg
   num_classes: 2
   backbone:
-    type: MobileNetV3_small_x1_0  # out channels: [16, 24, 48, 96]
-    pretrained: https://paddleseg.bj.bcebos.com/dygraph/backbone/mobilenetv3_small_x1_0_ssld.zip
+    type: MobileNetV2_x1_0 # out channels: [24, 32, 96, 320]
+    pretrained: https://paddleseg.bj.bcebos.com/dygraph/backbone/mobilenetv2_x1_0_ssld.tar.gz
   cm_bin_sizes: [1, 2, 4]
   backbone_indices: [0, 1, 2, 3]
   cm_out_ch: 128
