@@ -45,6 +45,10 @@ def parse_args():
         help='Num workers for data loader',
         type=int,
         default=0)
+    parser.add_argument(
+        '--for_test',
+        help='Use test dataset to evalulate.',
+        action='store_true')
 
     # augment for evaluation
     parser.add_argument(
@@ -104,6 +108,9 @@ def main(args):
         raise RuntimeError('No configuration file specified.')
 
     cfg = Config(args.cfg)
+    if args.for_test:
+        val_path = cfg.val_dataset_config['val_path']
+        cfg.dic['val_dataset']['val_path'] = val_path[0:-7] + "test.txt"
     val_dataset = cfg.val_dataset
     if val_dataset is None:
         raise RuntimeError(
