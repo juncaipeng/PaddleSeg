@@ -1,8 +1,8 @@
 echo "CUDA_VISIBLE_DEVICES: ${CUDA_VISIBLE_DEVICES}"
 
-model=mixed_dataset_mobileseg_mv3_398x224
-tag=test_qat_1
-model_path=output/mixed_dataset_mobileseg_mobilenetv3/test_1/best_model/model.pdparams
+model=1_mixed_dataset_mobileseg_mobilenetv3_x4
+tag=test_qat_0
+model_path=output/1_mixed_dataset_mobileseg_mobilenetv3_x4/test_1/best_model/model.pdparams
 lr=0.001
 iters=100000
 
