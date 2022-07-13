@@ -46,7 +46,7 @@ optimizer:
 
 lr_scheduler:
   type: PolynomialDecay
-  learning_rate: 0.1
+  learning_rate: 0.01
   end_lr: 0
   power: 0.9
 
@@ -62,7 +62,5 @@ loss:
 model:
   type: PPLiteSeg
   backbone:
-    type: STDC1
-    pretrained: https://bj.bcebos.com/paddleseg/dygraph/PP_STDCNet1.tar.gz
-  arm_out_chs: [32, 64, 128]
-  seg_head_inter_chs: [32, 64, 64]
+    type: STDC2
+    pretrained: https://bj.bcebos.com/paddleseg/dygraph/PP_STDCNet2.tar.gz
