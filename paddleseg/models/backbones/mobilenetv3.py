@@ -148,7 +148,8 @@ class MobileNetV3(nn.Layer):
                 act=act) for i, (k, exp, c, se, act, s) in enumerate(self.cfg)
         ])
 
-        out_channels = [config[idx][2] for idx in self.out_index]
+        out_channels = [inplanes]
+        out_channels += [config[idx][2] for idx in self.out_index]
         self.feat_channels = [
             _make_divisible(self.scale * c) for c in out_channels
         ]
@@ -184,9 +185,11 @@ class MobileNetV3(nn.Layer):
             return_patterns = [stages_pattern[i] for i in return_stages]
 
     def forward(self, x):
-        x = self.conv(x)
-
         feat_list = []
+
+        x = self.conv(x)
+        feat_list.append(x)
+
         for idx, block in enumerate(self.blocks):
             x = block(x)
             if idx in self.out_index:
