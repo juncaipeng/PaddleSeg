@@ -57,10 +57,15 @@ loss:
         - type: CrossEntropyLoss
         - type: LovaszSoftmaxLoss
       coef: [0.8, 0.2]
-  coef: [1, 1, 1]
+  coef: [1, 1, 1, 1]
 
 model:
   type: PPLiteSeg
   backbone:
-    type: STDC2
+    type: STDC2   # [x2 x4 x8 x16 x32]
     pretrained: https://bj.bcebos.com/paddleseg/dygraph/PP_STDCNet2.tar.gz
+  cm_out_ch: 128
+  backbone_indices: [1, 2, 3, 4]
+  arm_out_chs: [8, 64, 96, 128]
+  seg_head_inter_chs: [4, 64, 64, 64]
+  use_last_fuse: True
