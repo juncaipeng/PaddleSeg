@@ -1,0 +1,23 @@
+_base_: './deepglobe.yml'
+
+model:
+  type: MobileSeg
+  backbone:
+    type: MobileNetV3_large_x1_0  # out channels: [24, 40, 112, 160]
+    pretrained: https://paddleseg.bj.bcebos.com/dygraph/backbone/mobilenetv3_large_x1_0_ssld.tar.gz
+  cm_bin_sizes: [1, 2, 4]
+  backbone_indices: [1, 2, 3]
+  cm_out_ch: 128
+  arm_out_chs: [32, 64, 128]
+  seg_head_inter_chs: [32, 32, 32]
+  use_last_fuse: False
+
+loss:
+  types:
+    - type: OhemCrossEntropyLoss
+      min_kept: 260000   # batch_size * 1024 * 1024 // 16
+    - type: OhemCrossEntropyLoss
+      min_kept: 260000
+    - type: OhemCrossEntropyLoss
+      min_kept: 260000
+  coef: [1, 1, 1]
