@@ -5,7 +5,7 @@ FILENAME=$1
 # MODE be one of ['lite_train_lite_infer' 'lite_train_whole_infer' 'whole_train_whole_infer', 'whole_infer', 'klquant_whole_infer']
 MODE=$2
 
-dataline=$(awk 'NR==1, NR==51{print}'  $FILENAME)
+dataline=$(awk 'NR>=1{print}'  $FILENAME)
 
 # parser params
 IFS=$'\n'
@@ -130,6 +130,14 @@ status_log="${LOG_PATH}/results_python.log"
 echo "------------------------ ${MODE} ------------------------" >> $status_log
 
 
+last_idx=$((${#lines[@]}-1))
+extra_key=$(func_parser_key "${lines[last_idx]}")
+extra_value=$(func_parser_value "${lines[last_idx]}")
+if [ "${extra_key}" = "log_iters" ];then
+    log_iters="${extra_value}"
+fi
+
+
 function func_inference(){
     IFS='|'
     _python=$1
@@ -170,10 +178,11 @@ function func_inference(){
                             set_infer_params1=$(func_set_params "${infer_key1}" "${infer_value1}")  ##
                             set_infer_params2=$(func_set_params "${infer_key2}" "${infer_value2}")  ##
                             command="${_python} ${_script} ${use_gpu_key}=${use_gpu} ${use_mkldnn_key}=${use_mkldnn} ${set_cpu_threads} ${set_model_dir} ${set_batchsize} ${set_infer_data} ${set_benchmark} ${set_precision} ${set_infer_params1} ${set_infer_params2} > ${_save_log_path} 2>&1 " ##
+                            echo $command
                             eval $command
                             last_status=${PIPESTATUS[0]}
                             eval "cat ${_save_log_path}"
-                            status_check $last_status "${command}" "${status_log}"
+                            status_check $last_status "${command}" "${status_log}" "${model_name}"
                         done
                     done
                 done
@@ -202,10 +211,11 @@ function func_inference(){
                         set_infer_params1=$(func_set_params "${infer_key1}" "${infer_value1}")  ##
                         set_infer_params2=$(func_set_params "${infer_key2}" "${infer_value2}")  ##
                         command="${_python} ${_script} ${use_gpu_key}=${use_gpu} ${set_tensorrt} ${set_precision} ${set_model_dir} ${set_batchsize} ${set_infer_data} ${set_benchmark} ${set_infer_params2} > ${_save_log_path} 2>&1 " ##
+                        echo $command
                         eval $command
                         last_status=${PIPESTATUS[0]}
                         eval "cat ${_save_log_path}"
-                        status_check $last_status "${command}" "${status_log}"
+                        status_check $last_status "${command}" "${status_log}" "${model_name}"
 
                     done
                 done
@@ -239,7 +249,7 @@ if [ ${MODE} = "whole_infer" ] || [ ${MODE} = "klquant_whole_infer" ]; then
             echo ${infer_run_exports[Count]}
             eval $export_cmd
             status_export=$?
-            status_check $status_export "${export_cmd}" "${status_log}"
+            status_check $status_export "${export_cmd}" "${status_log}" "${model_name}"
         else
             save_infer_dir=${infer_model}
         fi
@@ -315,7 +325,9 @@ else
                 set_batchsize=$(func_set_params "${train_batch_key}" "${train_batch_value}")
                 set_train_params1=$(func_set_params "${train_param_key1}" "${train_param_value1}")
                 set_use_gpu=$(func_set_params "${train_use_gpu_key}" "${train_use_gpu}")
-                if [ ${#ips} -le 26 ];then
+                # if length of ips >= 15, then it is seen as multi-machine
+                # 15 is the min length of ips info for multi-machine: 0.0.0.0,0.0.0.0
+                if [ ${#ips} -le 15 ];then
                     save_log="${LOG_PATH}/${trainer}_gpus_${gpu}_autocast_${autocast}"
                     nodes=1
                 else
@@ -333,16 +345,25 @@ else
 
                 set_save_model=$(func_set_params "${save_model_key}" "${save_log}")
                 if [ ${#gpu} -le 2 ];then  # train with cpu or single gpu
-                    cmd="${python} ${run_train} ${set_use_gpu}  ${set_save_model} ${set_epoch} ${set_pretrain} ${set_autocast} ${set_batchsize} ${set_train_params1} ${set_amp_config} "
-                elif [ ${#ips} -le 26 ];then  # train with multi-gpu
+                    cmd="${python} ${run_train} ${set_use_gpu}  ${set_save_model} ${set_epoch} ${set_pretrain} ${set_autocast} ${set_batchsize} ${set_train_params1} ${set_amp_config}"
+                elif [ ${#ips} -le 15 ];then  # train with multi-gpu
                     cmd="${python} -m paddle.distributed.launch --gpus=${gpu} ${run_train} ${set_use_gpu} ${set_save_model} ${set_epoch} ${set_pretrain} ${set_autocast} ${set_batchsize} ${set_train_params1} ${set_amp_config}"
                 else     # train with multi-machine
                     cmd="${python} -m paddle.distributed.launch --ips=${ips} --gpus=${gpu} ${run_train} ${set_use_gpu} ${set_save_model} ${set_pretrain} ${set_epoch} ${set_autocast} ${set_batchsize} ${set_train_params1} ${set_amp_config}"
                 fi
+                
+                if [ -n "${log_iters}" ];then
+                    cmd="${cmd} --log_iters ${log_iters}"
+                fi
+
                 # run train
                 eval $cmd
-                status_check $? "${cmd}" "${status_log}"
+                status_check $? "${cmd}" "${status_log}" "${model_name}"
 
+                # modify model dir if no eval
+                if [ ! -f "${save_log}/${train_model_name}" ]; then
+                    train_model_name="iter_${epoch_num}/model.pdparams"
+                fi
                 set_eval_pretrain=$(func_set_params "${pretrain_model_key}" "${save_log}/${train_model_name}")
                 # save norm trained models to set pretrain for pact training and fpgm training
                 if [ ${trainer} = ${trainer_norm} ] && [ ${nodes} -le 1]; then
@@ -353,7 +374,7 @@ else
                     set_eval_params1=$(func_set_params "${eval_key1}" "${eval_value1}")
                     eval_cmd="${python} ${eval_py} ${set_eval_pretrain} ${set_use_gpu} ${set_eval_params1}"
                     eval $eval_cmd
-                    status_check $? "${eval_cmd}" "${status_log}"
+                    status_check $? "${eval_cmd}" "${status_log}" "${model_name}"
                 fi
                 # run export model
                 if [ ${run_export} != "null" ]; then
@@ -363,7 +384,7 @@ else
                     set_save_infer_key=$(func_set_params "${save_infer_key}" "${save_infer_path}")
                     export_cmd="${python} ${run_export} ${set_export_weight} ${set_save_infer_key}"
                     eval $export_cmd
-                    status_check $? "${export_cmd}" "${status_log}"
+                    status_check $? "${export_cmd}" "${status_log}" "${model_name}"
 
                     #run inference
                     eval $env

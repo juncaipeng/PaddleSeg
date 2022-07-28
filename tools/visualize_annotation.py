@@ -39,13 +39,13 @@ def parse_args():
         '--file_path',
         help='The file contains the path of origin and annotated images',
         type=str)
-    parser.add_argument('--pred_dir',
-                        help='the dir of predicted images',
-                        type=str)
-    parser.add_argument('--save_dir',
-                        help='The directory for saving the visualized images',
-                        type=str,
-                        default='./output/visualize_annotation')
+    parser.add_argument(
+        '--pred_dir', help='the dir of predicted images', type=str)
+    parser.add_argument(
+        '--save_dir',
+        help='The directory for saving the visualized images',
+        type=str,
+        default='./output/visualize_annotation')
     return parser.parse_args()
 
 
@@ -96,10 +96,8 @@ def visualize_origin_annotated_imgs(args):
 
         # weighted image
         color_map = visualize.get_color_map_list(256)
-        weighted_img = utils.visualize.visualize(origin_path,
-                                                 annot_img,
-                                                 color_map,
-                                                 weight=0.6)
+        weighted_img = utils.visualize.visualize(
+            origin_path, annot_img, color_map, weight=0.6)
         weighted_img = Image.fromarray(
             cv2.cvtColor(weighted_img, cv2.COLOR_BGR2RGB))
 
@@ -213,10 +211,8 @@ def visualize_origin_annot_pred_imgs(args):
 
         # weighted annotated image
         color_map = visualize.get_color_map_list(256)
-        wt_annot_img = utils.visualize.visualize(origin_path,
-                                                 annot_img,
-                                                 color_map,
-                                                 weight=0.6)
+        wt_annot_img = utils.visualize.visualize(
+            origin_path, annot_img, color_map, weight=0.6)
         wt_annot_img = Image.fromarray(
             cv2.cvtColor(wt_annot_img, cv2.COLOR_BGR2RGB))
 
@@ -228,10 +224,8 @@ def visualize_origin_annot_pred_imgs(args):
             print('{} is not existed'.format(pred_path))
             continue
         pred_img = np.array(Image.open(pred_path))
-        wt_pred_img = utils.visualize.visualize(origin_path,
-                                                pred_img,
-                                                color_map,
-                                                weight=0.6)
+        wt_pred_img = utils.visualize.visualize(
+            origin_path, pred_img, color_map, weight=0.6)
         wt_pred_img = Image.fromarray(
             cv2.cvtColor(wt_pred_img, cv2.COLOR_BGR2RGB))
 
@@ -250,9 +244,8 @@ def visualize_origin_annot_pred_imgs(args):
         image_name = "{}_{:.3f}_{:.3f}_min{}_max{}_{:.3f}_{:.3f}_{:.3f}.jpg".format(
             image_name, annot_ratio, pred_ratio, pred_min, pred_max, hm, sm, vm)
         result_img.save(
-            os.path.join(save_dir,
-                         'ratio_thr_' + str(ratio_thr) + '_' + cls_name,
-                         image_name))
+            os.path.join(save_dir, 'ratio_thr_' + str(ratio_thr) + '_' +
+                         cls_name, image_name))
         bar.update(idx + 1)
 
     precision = cls_res['tp'] / (cls_res['tp'] + cls_res['fp'])
