@@ -103,6 +103,8 @@ def visualize_origin_annotated_imgs(args):
 
         # result image
         result_img = visualize.paste_images([origin_img, weighted_img])
+        if result_img.mode == 'RGBA':
+            result_img = result_img.convert("RGB")
 
         # save
         image_name = os.path.split(origin_path)[-1]
@@ -256,4 +258,4 @@ def visualize_origin_annot_pred_imgs(args):
 
 if __name__ == '__main__':
     args = parse_args()
-    visualize_origin_annot_pred_imgs(args)
+    visualize_origin_annotated_imgs(args)
