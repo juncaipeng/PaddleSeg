@@ -5,9 +5,9 @@ iters: 80000
 train_dataset:
   type: Dataset
   dataset_root: data/seg_jishui_dataset_new
-  num_classes: 3
+  num_classes: 2
   mode: train
-  train_path: data/seg_jishui_dataset_new/2cls_train_merged_add_haidian_gundu1.txt
+  train_path: data/seg_jishui_dataset_new/samples_positive_train.txt
   transforms:
     - type: ResizeStepScaling
       min_scale_factor: 0.5
@@ -26,9 +26,9 @@ train_dataset:
 val_dataset:
   type: Dataset
   dataset_root: data/seg_jishui_dataset_new
-  num_classes: 3
+  num_classes: 2
   mode: val
-  val_path: data/seg_jishui_dataset_new/test.txt
+  val_path: data/seg_jishui_dataset_new/samples_positive_test.txt
   transforms:
     - type: Normalize
 
