@@ -1,7 +1,7 @@
 _base_: '../_base_/ade20k.yml'
 
 batch_size: 4  # total is 16
-iters: 80000
+iters: 160000
 
 optimizer:
   weight_decay: 5.0e-4
@@ -25,4 +25,4 @@ model:
   lraspp_head_inter_chs: [32, 64]
   lraspp_head_out_ch: 128
   resize_mode: bilinear
-  use_gap: False
+  use_gap: True
