@@ -1,5 +1,5 @@
 batch_size: 4 # total: 4*4
-iters: 80000
+iters: 5000
 
 optimizer:
   type: sgd
@@ -8,18 +8,18 @@ optimizer:
 
 lr_scheduler:
   type: PolynomialDecay
-  learning_rate: 0.01
+  learning_rate: 0.001
   end_lr: 0
   power: 0.9
-  warmup_iters: 1000
+  warmup_iters: 100
   warmup_start_lr: 1.0e-5
 
 train_dataset:
   type: Dataset
-  dataset_root: data/deepglobe
-  num_classes: 2
+  dataset_root: data/data_v2_png
+  num_classes: 3
   mode: train
-  train_path: data/deepglobe/train.txt
+  train_path: data/data_v2_png/train.txt
   transforms:
     - type: ResizeStepScaling
       min_scale_factor: 0.8
@@ -41,9 +41,9 @@ train_dataset:
 
 val_dataset:
   type: Dataset
-  dataset_root: data/deepglobe
-  num_classes: 2
+  dataset_root: data/data_v2_png
+  num_classes: 3
   mode: val
-  val_path: data/deepglobe/val.txt
+  val_path: data/data_v2_png/samples_all.txt
   transforms:
     - type: Normalize

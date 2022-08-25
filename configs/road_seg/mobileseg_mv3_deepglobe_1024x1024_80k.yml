@@ -11,6 +11,7 @@ model:
   arm_out_chs: [32, 64, 128]
   seg_head_inter_chs: [32, 32, 32]
   use_last_fuse: False
+  pretrained: deepglobe_trained_models/mobileseg_mv3_models/model.pdparams
 
 loss:
   types:
