@@ -1,4 +1,4 @@
-batch_size: 4 # total: 4*4
+batch_size: 4 # total: 2*4
 iters: 5000
 
 optimizer:
