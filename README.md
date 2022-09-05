@@ -63,8 +63,8 @@ PaddleSeg is an end-to-end high-efficent development toolkit for image segmentat
 
 ## <img src="./docs/images/chat.png" width="20"/> Community
 
-* If you have any questions, suggestions and feature requests, please create an issues in [GitHub Issues](https://github.com/PaddlePaddle/PaddleSeg/issues).
 * Welcome to scan the following QR code and join paddleseg wechat group to communicate with us.
+* If you have any questions, suggestions and feature requests, please create an issues in [GitHub Issues](https://github.com/PaddlePaddle/PaddleSeg/issues).
 
 <div align="center">
 <img src="https://user-images.githubusercontent.com/48433081/163670184-43cfb3ae-2047-4ba3-8dae-6c02090dd177.png"  width = "200" />  
@@ -366,14 +366,13 @@ Note that:
 
 ## <img src="./docs/images/teach.png" width="20"/> Tutorials
 
-**Tutorials**
+**Introductory Tutorials**
 
+* [Installation](./docs/install.md)
 * [Quick Start](./docs/quick_start.md)
 * [A 20 minutes Blitz to learn PaddleSeg](./docs/whole_process.md)
 
-**Docs**
-
-* [Installation](./docs/install.md)
+**Basic Tutorials**
 
 *  Data Preparation
     * [Prepare Public Dataset](./docs/data/pre_data.md)
@@ -395,6 +394,10 @@ Note that:
     * [Paddle Serving](./docs/deployment/serving/serving.md)
     * [Paddle JS](./docs/deployment/web/web.md)
     * [Benchmark](./docs/deployment/inference/infer_benchmark.md)
+
+**Advanced Tutorials**
+
+* [Training Tricks](./docs/train/train_tricks.md)
 
 *  Model Compression
     * [Quantization](./docs/slim/quant/quant.md)
