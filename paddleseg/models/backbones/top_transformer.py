@@ -454,7 +454,7 @@ class InjectionMultiSumCBR(nn.Layer):
         self.act = HSigmoid()
 
     def forward(self, x_low, x_global):
-        xl_hw = paddle.shape(x)[2:]
+        xl_hw = paddle.shape(x_low)[2:]
         local_feat = self.local_embedding(x_low)
         # kernel
         global_act = self.global_act(x_global)
@@ -469,21 +469,56 @@ class InjectionMultiSumCBR(nn.Layer):
 
 
 class FuseBlockSum(nn.Layer):
-    def __init__(self, in_channels, out_channels, activations=None):
+    def __init__(self, in_channels, out_channels, activations=None,
+                 lr_mult=1.0):
         super(FuseBlockSum, self).__init__()
 
         self.fuse1 = ConvBNAct(
-            in_channels, out_channels, kernel_size=1, act=None)
+            in_channels, out_channels, kernel_size=1, act=None, lr_mult=lr_mult)
         self.fuse2 = ConvBNAct(
-            in_channels, out_channels, kernel_size=1, act=None)
+            in_channels, out_channels, kernel_size=1, act=None, lr_mult=lr_mult)
 
     def forward(self, x_low, x_high):
-        xl_hw = paddle.shape(x)[2:]
+        xl_hw = paddle.shape(x_low)[2:]
         inp = self.fuse1(x_low)
         kernel = self.fuse2(x_high)
         feat_h = F.interpolate(
             kernel, xl_hw, mode='bilinear', align_corners=False)
         out = inp + feat_h
+        return out
+
+
+class FuseBlockSum_1(nn.Layer):
+    def __init__(self,
+                 low_channels,
+                 high_channels,
+                 out_channels,
+                 activations=None,
+                 lr_mult=1.0):
+        super().__init__()
+
+        self.low_fuse = ConvBNAct(
+            low_channels,
+            out_channels,
+            kernel_size=1,
+            act=None,
+            lr_mult=lr_mult)
+        self.high_fuse = ConvBNAct(
+            high_channels,
+            out_channels,
+            kernel_size=1,
+            act=None,
+            lr_mult=lr_mult)
+
+    def forward(self, x_low, x_high):
+        x_low = self.low_fuse(x_low)
+        x_high = self.high_fuse(x_high)
+        x_high = F.interpolate(
+            x_high,
+            paddle.shape(x_low)[2:],
+            mode='bilinear',
+            align_corners=False)
+        out = x_low + x_high
         return out
 
 
@@ -584,6 +619,31 @@ class TopTransformer(nn.Layer):
                             lr_mult=lr_mult))
                 else:
                     self.SIM.append(Identity())
+        else:
+            for i in range(len(self.feat_channels)):
+                '''
+                if i in trans_out_indices:
+                    conv = ConvBNAct(self.feat_channels[i], injection_out_channels[i], kernel_size=1, lr_mult=lr_mult)
+                    self.SIM.append(conv)
+                else:
+                    self.SIM.append(Identity())
+                '''
+                if i not in trans_out_indices:
+                    self.SIM.append(Identity())
+                elif i == trans_out_indices[-1]:
+                    conv = ConvBNAct(
+                        self.feat_channels[i],
+                        injection_out_channels[i],
+                        kernel_size=1,
+                        lr_mult=lr_mult)
+                    self.SIM.append(conv)
+                else:
+                    fuse = FuseBlockSum_1(
+                        self.feat_channels[i],
+                        injection_out_channels[i + 1],
+                        injection_out_channels[i],
+                        lr_mult=lr_mult)
+                    self.SIM.append(fuse)
 
         self.pretrained = pretrained
         self.init_weight()
@@ -593,23 +653,35 @@ class TopTransformer(nn.Layer):
             utils.load_entire_model(self, self.pretrained)
 
     def forward(self, x):
-        ouputs = self.tpm(x)
-        out = self.ppa(ouputs)
-        out = self.trans(out)
+        outputs = self.tpm(x)  # 1/4, 1/8, 1/16, 1/32
 
         if self.injection:
+            out = self.ppa(outputs)
+            out = self.trans(out)
             xx = out.split(self.feat_channels, axis=1)
             results = []
-            for i in range(len(self.feat_channels)):
-                if i in self.trans_out_indices:
-                    local_tokens = ouputs[i]
-                    global_semantics = xx[i]
-                    out_ = self.SIM[i](local_tokens, global_semantics)
-                    results.append(out_)
+            for i in self.trans_out_indices:  # [1, 2, 3]
+                local_tokens = outputs[i]
+                global_semantics = xx[i]
+                out_ = self.SIM[i](local_tokens, global_semantics)
+                results.append(out_)
             return results
         else:
-            ouputs.append(out)
-            return ouputs
+            '''
+            results = []
+            for i in self.trans_out_indices:     # [1, 2, 3]
+                out_ = self.SIM[i](outputs[i])
+                results.append(out_)
+            return results
+            '''
+            results = []
+            i = self.trans_out_indices[-1]
+            x = self.SIM[i](outputs[i])
+            results.append(x)
+            for i in reversed(self.trans_out_indices[0:-1]):  # [2, 1]
+                x = self.SIM[i](outputs[i], x)
+                results.insert(0, x)
+            return results
 
 
 @manager.BACKBONES.add_component
